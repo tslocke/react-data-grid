@@ -27,7 +27,7 @@ const SortableHeaderCell = React.createClass({
       direction = DEFINE_SORT.DESC;
       break;
     case DEFINE_SORT.DESC:
-      direction = DEFINE_SORT.NONE;
+      direction = DEFINE_SORT.ASC;
       break;
     }
     this.props.onSort(
