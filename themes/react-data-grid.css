@@ -1,3 +1,5 @@
+@import url('https://npmcdn.com/react-select/dist/react-select.css');
+
 .react-grid-Container {
   clear: both;
   margin-top: 0;
@@ -39,6 +41,16 @@
   color: inherit;
   border: 1px solid #d2d2d2;
 }
+
+.react-grid-Toolbar .grouped-col-btn{
+  background-color: #428bca;
+  color: white;
+}
+
+.react-grid-Toolbar .grouped-col-btn:hover{
+  color: white;
+}
+
 
 
 .react-grid-Toolbar .tools {
@@ -164,10 +176,6 @@ fieldset[disabled] select.editor-main {
 textarea.react-grid-Cell input.editor-main,
 textareaselect.editor-main {
   height: auto;
-}
-
-.react-grid-checkbox-container {
-    cursor: pointer;
 }
 
 .react-grid-checkbox, .radio-custom {
@@ -359,6 +367,17 @@ textareaselect.editor-main {
  background-color: #DBECFA;
 }
 
+.react-grid-Row.row-selected{
+ background-color: #DBECFA;
+}
+
+.react-grid-Row .row-selected{
+ background-color: #DBECFA;
+}
+
+.react-grid-row-group .row-expand-icon:hover {
+  color: #777777;
+}
 
 .react-grid-Cell--locked:last-of-type {
   border-right: 1px solid #dddddd;
@@ -477,4 +496,14 @@ textarea.react-autocomplete-Autocomplete__search {
 
 .react-grid-Cell.readonly {
   background-color : black;
+}
+
+.react-grid-Viewport {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none;   /* Chrome/Safari/Opera */
+  -khtml-user-select: none;    /* Konqueror */
+  -moz-user-select: none;      /* Firefox */
+  -ms-user-select: none;       /* Internet Explorer/Edge */
+  user-select: none;           /* Non-prefixed version, currently
+                                    not supported by any browser */
 }

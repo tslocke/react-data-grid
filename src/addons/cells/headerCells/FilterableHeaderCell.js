@@ -1,5 +1,5 @@
 const React              = require('react');
-const ExcelColumn        = require('../../grids/ExcelColumn');
+const ExcelColumn        = require('../../../PropTypeShapes/ExcelColumn');
 
 const FilterableHeaderCell = React.createClass({
 
@@ -15,7 +15,7 @@ const FilterableHeaderCell = React.createClass({
   handleChange(e: Event) {
     let val = e.target.value;
     this.setState({filterTerm: val });
-    this.props.onChange({filterTerm: val, columnKey: this.props.column.key});
+    this.props.onChange({filterTerm: val, column: this.props.column});
   },
 
   renderInput: function(): ?ReactElement {

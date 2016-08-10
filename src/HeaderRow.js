@@ -1,8 +1,8 @@
 const React             = require('react');
 const shallowEqual    = require('fbjs/lib/shallowEqual');
-const HeaderCell        = require('./HeaderCell');
+const BaseHeaderCell        = require('./HeaderCell');
 const getScrollbarSize  = require('./getScrollbarSize');
-const ExcelColumn  = require('./addons/grids/ExcelColumn');
+const ExcelColumn  = require('./PropTypeShapes/ExcelColumn');
 const ColumnUtilsMixin  = require('./ColumnUtils');
 const SortableHeaderCell    = require('./addons/cells/headerCells/SortableHeaderCell');
 const FilterableHeaderCell  = require('./addons/cells/headerCells/FilterableHeaderCell');
@@ -36,7 +36,8 @@ const HeaderRow = React.createClass({
     onFilterChange: PropTypes.func,
     resizing: PropTypes.object,
     onScroll: PropTypes.func,
-    rowType: PropTypes.string
+    rowType: PropTypes.string,
+    draggableHeaderCell: PropTypes.func
   },
 
   mixins: [ColumnUtilsMixin],
@@ -62,8 +63,12 @@ const HeaderRow = React.createClass({
     return HeaderCellType.NONE;
   },
 
-  getFilterableHeaderCell() {
-    return <FilterableHeaderCell onChange={this.props.onFilterChange} />;
+  getFilterableHeaderCell(column) {
+    let FilterRenderer = FilterableHeaderCell;
+    if (column.filterRenderer !== undefined) {
+      FilterRenderer = column.filterRenderer;
+    }
+    return <FilterRenderer {...this.props} onChange={this.props.onFilterChange} />;
   },
 
   getSortableHeaderCell(column) {
@@ -82,7 +87,7 @@ const HeaderRow = React.createClass({
         renderer = this.getSortableHeaderCell(column);
         break;
       case HeaderCellType.FILTERABLE:
-        renderer = this.getFilterableHeaderCell();
+        renderer = this.getFilterableHeaderCell(column);
         break;
       default:
         break;
@@ -103,13 +108,13 @@ const HeaderRow = React.createClass({
   getCells(): Array<HeaderCell> {
     let cells = [];
     let lockedCells = [];
-
     for (let i = 0, len = this.getSize(this.props.columns); i < len; i++) {
       let column = this.getColumn(this.props.columns, i);
       let _renderer = this.getHeaderRenderer(column);
       if (column.key === 'select-row' && this.props.rowType === 'filter') {
         _renderer = <div></div>;
       }
+      let HeaderCell = column.draggable ? this.props.draggableHeaderCell : BaseHeaderCell;
       let cell = (
         <HeaderCell
           ref={i}

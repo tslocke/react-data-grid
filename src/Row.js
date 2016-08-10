@@ -6,6 +6,12 @@ const ColumnUtilsMixin  = require('./ColumnUtils');
 const cellMetaDataShape = require('./PropTypeShapes/CellMetaDataShape');
 const PropTypes = React.PropTypes;
 
+const CellExpander = React.createClass({
+  render() {
+    return (<Cell {...this.props}/>);
+  }
+});
+
 const Row = React.createClass({
 
   propTypes: {
@@ -16,14 +22,15 @@ const Row = React.createClass({
     cellMetaData: PropTypes.shape(cellMetaDataShape),
     isSelected: PropTypes.bool,
     idx: PropTypes.number.isRequired,
-    key: PropTypes.string,
     expandedRows: PropTypes.arrayOf(PropTypes.object),
-    extraClasses: PropTypes.string
+    extraClasses: PropTypes.string,
+    forceUpdate: PropTypes.bool,
+    subRowDetails: PropTypes.object
   },
 
   mixins: [ColumnUtilsMixin],
 
-  getDefaultProps(): {cellRenderer: Cell} {
+  getDefaultProps() {
     return {
       cellRenderer: Cell,
       isSelected: false,
@@ -39,7 +46,8 @@ const Row = React.createClass({
            nextProps.row !== this.props.row                                                              ||
            this.hasRowBeenCopied()                                                                       ||
            this.props.isSelected !== nextProps.isSelected                                                ||
-           nextProps.height !== this.props.height;
+           nextProps.height !== this.props.height                                                        ||
+           this.props.forceUpdate === true;
   },
 
   handleDragEnter() {
@@ -56,6 +64,14 @@ const Row = React.createClass({
         return this.getColumn(this.props.columns, selected.idx);
       }
     }
+  },
+
+  getCellRenderer(columnKey) {
+    let CellRenderer = this.props.cellRenderer;
+    if (this.props.subRowDetails && this.props.subRowDetails.field === columnKey) {
+      return CellExpander;
+    }
+    return CellRenderer;
   },
 
   getCells(): Array<ReactElement> {
@@ -78,7 +94,8 @@ const Row = React.createClass({
                       cellMetaData={this.props.cellMetaData}
                       rowData={this.props.row}
                       selectedColumn={selectedColumn}
-                      isRowSelected={this.props.isSelected} />);
+                      isRowSelected={this.props.isSelected}
+                      expandableOptions={this.getExpandableOptions(column.key)} />);
         if (column.locked) {
           lockedCells.push(cell);
         } else {
@@ -92,8 +109,8 @@ const Row = React.createClass({
 
   getRowHeight(): number {
     let rows = this.props.expandedRows || null;
-    if (rows && this.props.key) {
-      let row = rows[this.props.key] || null;
+    if (rows && this.props.idx) {
+      let row = rows[this.props.idx] || null;
       if (row) {
         return row.height;
       }
@@ -149,6 +166,10 @@ const Row = React.createClass({
   hasRowBeenCopied(): boolean {
     let copied = this.props.cellMetaData.copied;
     return copied != null && copied.rowIdx === this.props.idx;
+  },
+
+  getExpandableOptions(columnKey) {
+    return {canExpand: this.props.subRowDetails && this.props.subRowDetails.field === columnKey, expanded: this.props.subRowDetails && this.props.subRowDetails.expanded, children: this.props.subRowDetails && this.props.subRowDetails.children, treeDepth: this.props.subRowDetails ? this.props.subRowDetails.treeDepth : 0 };
   },
 
   renderCell(props: any): ReactElement {

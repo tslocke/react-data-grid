@@ -5,13 +5,22 @@ var EditableExample = `
 
 //options for priorities autocomplete editor
 var priorities = [{id:0, title : 'Critical'}, {id:1, title : 'High'}, {id:2, title : 'Medium'}, {id:3, title : 'Low'}]
-var AutoCompleteEditor = ReactDataGrid.Editors.AutoComplete;
+var AutoCompleteEditor = ReactDataGridPlugins.Editors.AutoComplete;
 var PrioritiesEditor = <AutoCompleteEditor options={priorities}/>
 
 //options for IssueType dropdown editor
-var issueTypes = ['Bug', 'Improvement', 'Epic', 'Story'];
-var DropDownEditor = ReactDataGrid.Editors.DropDownEditor;
-var IssueTypesEditor = <DropDownEditor options={issueTypes}/>
+//these can either be an array of strings, or an object that matches the schema below.
+var issueTypes = [
+  { id: 'bug', value: 'bug', text: 'Bug', title: 'Bug' },
+  { id: 'improvement', value: 'improvement', text: 'Improvement', title: 'Improvement' },
+  { id: 'epic', value: 'epic', text: 'Epic', title: 'Epic' },
+  { id: 'story', value: 'story', text: 'Story', title: 'Story' }
+];
+var DropDownEditor = ReactDataGridPlugins.Editors.DropDownEditor;
+var IssueTypesEditor = <DropDownEditor options={issueTypes}/>;
+
+var DropDownFormatter = ReactDataGridPlugins.Formatters.DropDownFormatter;
+var IssueTypesFormatter = <DropDownFormatter options={issueTypes}/>;
 
 //helper to generate a random date
 function randomDate(start, end) {
@@ -27,7 +36,7 @@ function createRows(numberOfRows){
       task: 'Task ' + i,
       complete: Math.min(100, Math.round(Math.random() * 110)),
       priority : ['Critical', 'High', 'Medium', 'Low'][Math.floor((Math.random() * 3) + 1)],
-      issueType : issueTypes[Math.floor((Math.random() * 3) + 1)],
+      issueType : issueTypes[Math.floor((Math.random() * 3) + 1)].value,
       startDate: randomDate(new Date(2015, 3, 1), new Date()),
       completeDate: randomDate(new Date(), new Date(2016, 0, 1))
     });
@@ -60,7 +69,8 @@ var columns = [
 {
   key : 'issueType',
   name : 'Issue Type',
-  editor : IssueTypesEditor
+  editor : IssueTypesEditor,
+  formatter: IssueTypesFormatter
 }
 ]
 
@@ -105,7 +115,7 @@ ReactDOM.render(<Example />, mountNode);
       return(
         <div>
           <h3>Built-In Cell Editor Example</h3>
-          <p>This example uses the built in <strong>Autocomplete</strong> editor for the priorities column and the <strong>DropdownEditor</strong> for the IssueType column. <strong>You must be using the <code>react-data-grid-with-addons.js</code> package to use the built in editors.</strong></p>
+          <p>This example uses the built in <strong>Autocomplete</strong> editor for the priorities column and the <strong>DropdownEditor</strong> for the IssueType column. <strong>You must include the <code>react-data-grid.ui-plugins.js</code> package to use the built in editors.</strong></p>
           <ReactPlayground codeText={EditableExample} />
         </div>
       )

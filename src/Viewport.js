@@ -13,6 +13,26 @@ const Viewport = React.createClass({
     columnMetrics: PropTypes.object.isRequired,
     rowGetter: PropTypes.oneOfType([PropTypes.array, PropTypes.func]).isRequired,
     selectedRows: PropTypes.array,
+    rowSelection: React.PropTypes.shape({
+      enableShiftSelect: React.PropTypes.bool,
+      onRowsSelected: React.PropTypes.func,
+      onRowsDeselected: React.PropTypes.func,
+      showCheckbox: React.PropTypes.bool,
+      selectBy: React.PropTypes.oneOfType([
+        React.PropTypes.shape({
+          indexes: React.PropTypes.arrayOf(React.PropTypes.number).isRequired
+        }),
+        React.PropTypes.shape({
+          isSelectedKey: React.PropTypes.string.isRequired
+        }),
+        React.PropTypes.shape({
+          keys: React.PropTypes.shape({
+            values: React.PropTypes.array.isRequired,
+            rowKey: React.PropTypes.string.isRequired
+          }).isRequired
+        })
+      ]).isRequired
+    }),
     expandedRows: PropTypes.array,
     rowRenderer: PropTypes.func,
     rowsCount: PropTypes.number.isRequired,
@@ -23,7 +43,9 @@ const Viewport = React.createClass({
     cellMetaData: PropTypes.shape(cellMetaDataShape),
     rowKey: PropTypes.string.isRequired,
     rowScrollTimeout: PropTypes.number,
-    contextMenu: PropTypes.element
+    contextMenu: PropTypes.element,
+    getSubRowDetails: PropTypes.func,
+    rowGroupRenderer: PropTypes.func
   },
 
   onScroll(scroll: {scrollTop: number; scrollLeft: number}) {
@@ -81,7 +103,10 @@ const Viewport = React.createClass({
           onRows={this.props.onRows}
           rowScrollTimeout={this.props.rowScrollTimeout}
           contextMenu={this.props.contextMenu}
-          />
+          rowSelection={this.props.rowSelection}
+          getSubRowDetails={this.props.getSubRowDetails}
+          rowGroupRenderer={this.props.rowGroupRenderer}
+        />
       </div>
     );
   }

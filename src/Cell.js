@@ -1,8 +1,9 @@
+import isEqual from 'lodash/isEqual';
 const React             = require('react');
 const ReactDOM = require('react-dom');
 const joinClasses       = require('classnames');
 const EditorContainer   = require('./addons/editors/EditorContainer');
-const ExcelColumn       = require('./addons/grids/ExcelColumn');
+const ExcelColumn       = require('./PropTypeShapes/ExcelColumn');
 const isFunction        = require('./addons/utils/isFunction');
 const CellMetaDataShape = require('./PropTypeShapes/CellMetaDataShape');
 const SimpleCellFormatter = require('./addons/formatters/SimpleCellFormatter');
@@ -28,7 +29,9 @@ const Cell = React.createClass({
     handleDragStart: React.PropTypes.func,
     className: React.PropTypes.string,
     cellControls: React.PropTypes.any,
-    rowData: React.PropTypes.object.isRequired
+    rowData: React.PropTypes.object.isRequired,
+    forceUpdate: React.PropTypes.bool,
+    expandableOptions: React.PropTypes.object.isRequired
   },
 
   getDefaultProps: function(): {tabIndex: number; ref: string; isExpanded: boolean } {
@@ -41,9 +44,7 @@ const Cell = React.createClass({
 
   getInitialState() {
     return {
-      isCellValueChanging: false,
-      oldRowData: {},
-      newRowData: {}
+      isCellValueChanging: false
     };
   },
 
@@ -53,9 +54,7 @@ const Cell = React.createClass({
 
   componentWillReceiveProps(nextProps) {
     this.setState({
-      isCellValueChanging: this.props.value !== nextProps.value,
-      oldRowData: this.props.rowData,
-      newRowData: nextProps.rowData
+      isCellValueChanging: this.props.value !== nextProps.value
     });
   },
 
@@ -80,7 +79,10 @@ const Cell = React.createClass({
     || this.isCopyCellChanging(nextProps)
     || this.props.isRowSelected !== nextProps.isRowSelected
     || this.isSelected()
-    || this.props.value !== nextProps.value;
+    || this.props.value !== nextProps.value
+    || this.props.forceUpdate === true
+    || this.props.className !== nextProps.className
+    || this.hasChangedDependentValues(nextProps);
   },
 
   onCellClick(e) {
@@ -101,6 +103,20 @@ const Cell = React.createClass({
     let meta = this.props.cellMetaData;
     if (meta != null && meta.onCellDoubleClick && typeof(meta.onCellDoubleClick) === 'function') {
       meta.onCellDoubleClick({rowIdx: this.props.rowIdx, idx: this.props.idx}, e);
+    }
+  },
+
+  onCellExpand(e) {
+    e.stopPropagation();
+    let meta = this.props.cellMetaData;
+    if (meta != null && meta.onCellExpand != null) {
+      meta.onCellExpand({rowIdx: this.props.rowIdx, idx: this.props.idx, rowData: this.props.rowData, expandArgs: this.props.expandableOptions});
+    }
+  },
+
+  onCellKeyDown(e) {
+    if (this.canExpand() && e.key === 'Enter') {
+      this.onCellExpand(e);
     }
   },
 
@@ -126,7 +142,7 @@ const Cell = React.createClass({
     return style;
   },
 
-  getFormatter(): ?ReactElement {
+  getFormatter() {
     let col = this.props.column;
     if (this.isActive()) {
       return <EditorContainer rowData={this.getRowData()} rowIdx={this.props.rowIdx} idx={this.props.idx} cellMetaData={this.props.cellMetaData} column={col} height={this.props.height}/>;
@@ -135,8 +151,8 @@ const Cell = React.createClass({
     return this.props.column.formatter;
   },
 
-  getRowData() {
-    return this.props.rowData.toJSON ? this.props.rowData.toJSON() : this.props.rowData;
+  getRowData(props = this.props) {
+    return props.rowData.toJSON ? props.rowData.toJSON() : props.rowData;
   },
 
   getFormatterDependencies() {
@@ -168,7 +184,7 @@ const Cell = React.createClass({
 
   getUpdateCellClass() {
     return this.props.column.getUpdateCellClass
-      ? this.props.column.getUpdateCellClass(this.props.selectedColumn, this.props.column, this.state.isCellValueChanging, this.state.oldRowData, this.state.newRowData)
+      ? this.props.column.getUpdateCellClass(this.props.selectedColumn, this.props.column, this.state.isCellValueChanging)
       : '';
   },
 
@@ -214,6 +230,21 @@ const Cell = React.createClass({
     let meta = this.props.cellMetaData;
     if (meta == null) { return false; }
     return meta.enableCellSelect;
+  },
+
+  hasChangedDependentValues(nextProps) {
+    let currentColumn = this.props.column;
+    let hasChangedDependentValues = false;
+
+    if (currentColumn.getRowMetaData) {
+      let currentRowMetaData = currentColumn.getRowMetaData(this.getRowData(), currentColumn);
+      let nextColumn = nextProps.column;
+      let nextRowMetaData = nextColumn.getRowMetaData(this.getRowData(nextProps), nextColumn);
+
+      hasChangedDependentValues = !isEqual(currentRowMetaData, nextRowMetaData);
+    }
+
+    return hasChangedDependentValues;
   },
 
   applyUpdateClass() {
@@ -337,6 +368,14 @@ const Cell = React.createClass({
     }
   },
 
+  canEdit() {
+    return (this.props.column.editor != null) || this.props.column.editable;
+  },
+
+  canExpand() {
+    return this.props.expandableOptions && this.props.expandableOptions.canExpand;
+  },
+
   createColumEventCallBack(onColumnEvent, info) {
     return (e) => {
       onColumnEvent(e, info);
@@ -387,7 +426,7 @@ const Cell = React.createClass({
     return this.createEventDTO(gridEvents, columnEvents, onColumnEvent);
   },
 
-  renderCellContent(props: any): ReactElement {
+  renderCellContent(props) {
     let CellContent;
     let Formatter = this.getFormatter();
     if (React.isValidElement(Formatter)) {
@@ -398,11 +437,17 @@ const Cell = React.createClass({
     } else {
       CellContent = <SimpleCellFormatter value={this.props.value}/>;
     }
-    return (<div ref="cell"
-      className="react-grid-Cell__value">{CellContent} {this.props.cellControls}</div>);
+    let cellExpander;
+    let marginLeft = this.props.expandableOptions ? (this.props.expandableOptions.treeDepth * 30) : 0;
+    let marginLeftCell = this.props.expandableOptions ? (this.props.expandableOptions.treeDepth * 10) : 0;
+    if (this.canExpand()) {
+      cellExpander = (<span style={{float: 'left', marginLeft: marginLeft}} onClick={this.onCellExpand} >{this.props.expandableOptions.expanded ? String.fromCharCode('9660') : String.fromCharCode('9658')}</span>);
+    }
+    return (<div  ref="cell"
+      className="react-grid-Cell__value">{cellExpander}<span style={{float: 'left', marginLeft: marginLeftCell}}>{CellContent}</span> {this.props.cellControls} </div>);
   },
 
-  render(): ?ReactElement {
+  render() {
     let style = this.getStyle();
 
     let className = this.getCellClass();
@@ -417,7 +462,7 @@ const Cell = React.createClass({
     let dragHandle = (!this.isActive() && ColumnUtils.canEdit(this.props.column, this.props.rowData, this.props.cellMetaData.enableCellSelect)) ? <div className="drag-handle" draggable="true" onDoubleClick={this.onDragHandleDoubleClick}><span style={{display: 'none'}}></span></div> : null;
     let events = this.getEvents();
     return (
-      <div {...this.props} className={className} style={style} onContextMenu={this.onCellContextMenu} {...events}>
+      <div {...this.props} className={className} style={style} onClick={this.onCellClick} onDoubleClick={this.onCellDoubleClick} onContextMenu={this.onCellContextMenu} onDragOver={this.onDragOver} {...events}>
       {cellContent}
       {dragHandle}
       </div>

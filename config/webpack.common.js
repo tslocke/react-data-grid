@@ -5,18 +5,21 @@ var path = require("path");
 var argv = require('minimist')(process.argv.slice(2));
 var RELEASE = argv.release;
 
+function getPlugins() {
+  var nodeEnv = RELEASE ? '"production"' : '"development"';
+  var pluginsBase =  [
+    new webpack.DefinePlugin({'process.env.NODE_ENV': nodeEnv, 'global': 'window'})
+  ];
+
+  if (RELEASE) {
+    pluginsBase.push(new webpack.optimize.DedupePlugin());
+    pluginsBase.push(new webpack.optimize.OccurenceOrderPlugin());
+    pluginsBase.push(new webpack.optimize.AggressiveMergingPlugin());
+  }
+  return pluginsBase;
+};
 
 var config = {
-  entry: {
-    'react-data-grid' : './src/index',
-    'react-data-grid-with-addons' : './src/addons/index'
-  },
-  output: {
-    path: path.join(__dirname, "../dist"),
-    filename: "[name].js",
-    library: ["ReactDataGrid"],
-    libraryTarget: "umd"
-  },
   externals: {
     "react": {
       root : 'React',
@@ -24,12 +27,6 @@ var config = {
       commonjs2 : 'react',
       amd : 'react'
     },
-    "react/addons": {
-			root : 'React',
-			commonjs : 'react',
-			commonjs2 : 'react',
-			amd : 'react'
-		},
     "react-dom": {
 			root : 'ReactDOM',
 			commonjs : 'react-dom',
@@ -41,9 +38,9 @@ var config = {
   module: {
     loaders: [
       { test: /\.js$/, exclude: /node_modules/, loader: "babel-loader"}
-      
     ]
   },
+  plugins: getPlugins(),
   postLoaders: [
   {
     test: /\.js$/,

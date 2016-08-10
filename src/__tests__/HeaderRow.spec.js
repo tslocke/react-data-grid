@@ -6,7 +6,7 @@ const StubComponent = require('../../test/StubComponent');
 const helpers       = require('./GridPropHelpers');
 const HeaderRow     = rewire('../HeaderRow');
 
-describe('Header Unit Tests', () => {
+describe('Header Row Unit Tests', () => {
   let headerRow;
 
   // Configure local letiable replacements for the module.
@@ -17,7 +17,7 @@ describe('Header Unit Tests', () => {
 
   rewireModule(HeaderRow, {
     SortableHeaderCell: SortableHeaderCellStub,
-    HeaderCell: HeaderCellStub,
+    BaseHeaderCell: HeaderCellStub,
     FilterableHeaderCell: FilterableHeaderCellStub
   });
 

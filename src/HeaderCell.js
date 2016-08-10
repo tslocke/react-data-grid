@@ -1,7 +1,7 @@
 const React          = require('react');
 const ReactDOM      = require('react-dom');
 const joinClasses    = require('classnames');
-const ExcelColumn    = require('./addons/grids/ExcelColumn');
+const ExcelColumn    = require('./PropTypeShapes/ExcelColumn');
 const ResizeHandle   = require('./ResizeHandle');
 const PropTypes      = React.PropTypes;
 
@@ -72,7 +72,6 @@ const HeaderCell = React.createClass({
       left: this.props.column.left,
       display: 'inline-block',
       position: 'absolute',
-      overflow: 'hidden',
       height: this.props.height,
       margin: 0,
       textOverflow: 'ellipsis',

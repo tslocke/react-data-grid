@@ -4,3 +4,5 @@ lib
 **/build
 test/reports
 test/coverage
+.npmrc
+**.orig
