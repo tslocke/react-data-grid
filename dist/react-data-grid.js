@@ -1706,7 +1706,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        cellExpander,
 	        React.createElement(
 	          'span',
-	          { style: { float: 'left', marginLeft: marginLeftCell } },
+	          { style: { marginLeft: marginLeftCell } },
 	          CellContent
 	        ),
 	        ' ',
