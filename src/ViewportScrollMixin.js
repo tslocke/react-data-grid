@@ -44,7 +44,7 @@ module.exports = {
     return {
       displayStart: 0,
       displayEnd: totalRowCount,
-      height: props.minHeight,
+      height: (this.state && this.state.height) || props.minHeight,
       scrollTop: 0,
       scrollLeft: 0
     };
