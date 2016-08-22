@@ -46,6 +46,7 @@ const Row = React.createClass({
            nextProps.row !== this.props.row                                                              ||
            this.hasRowBeenCopied()                                                                       ||
            this.props.isSelected !== nextProps.isSelected                                                ||
+           this.props.extraClasses !== nextProps.extraClasses                                            ||
            nextProps.height !== this.props.height                                                        ||
            this.props.forceUpdate === true;
   },
