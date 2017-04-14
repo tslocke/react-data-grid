@@ -5,9 +5,10 @@ const ResizeHandle   = React.createClass({
   style: {
     position: 'absolute',
     top: 0,
-    right: 0,
-    width: 6,
-    height: '100%'
+    right: -7,
+    width: 13,
+    height: '100%',
+    zIndex: 10
   },
 
   render(): ?ReactElement {
